@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Bouncing Ball</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: white;
+      height: 100%;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<audio id="bounceSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1a4e31023a.mp3?filename=light-pop-110877.mp3" preload="auto"></audio>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  const ball = {
+    x: canvas.width / 2,
+    y: canvas.height / 4,
+    radius: 35,
+    dx: 4,
+    dy: 0,
+    gravity: 0.5,
+    bounce: -0.75,
+    isDragging: false,
+    touchedGroundLastFrame: false,
+    isStable: false
+  };
+
+  const splashDrops = [];
+  const bounceSound = document.getElementById("bounceSound");
+
+  function drawBackgroundText() {
+    ctx.save();
+    ctx.font = `${Math.floor(canvas.width / 8)}px Arial Black`;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.03)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("A.S.TRAVADI", canvas.width / 2, canvas.height / 2);
+    ctx.restore();
+  }
+
+  function drawBall() {
+    const gradient = ctx.createRadialGradient(ball.x - 10, ball.y - 10, 10, ball.x, ball.y, ball.radius);
+    gradient.addColorStop(0, "#ff4e50");
+    gradient.addColorStop(1, "#f9d423");
+
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = "rgba(255, 50, 50, 0.5)";
+    ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function createSplash() {
+    for (let i = 0; i < 20; i++) {
+      splashDrops.push({
+        x: ball.x + (Math.random() - 0.5) * ball.radius * 1.5,
+        y: canvas.height - ball.radius,
+        radius: Math.random() * 2 + 1,
+        dx: (Math.random() - 0.5) * 4,
+        dy: -(Math.random() * 3 + 1),
+        alpha: 1
+      });
+    }
+  }
+
+  function updateSplashes() {
+    for (let i = splashDrops.length - 1; i >= 0; i--) {
+      const drop = splashDrops[i];
+      drop.x += drop.dx;
+      drop.y += drop.dy;
+      drop.dy += 0.2;
+      drop.alpha -= 0.02;
+      if (drop.alpha <= 0) splashDrops.splice(i, 1);
+    }
+  }
+
+  function drawSplashes() {
+    splashDrops.forEach(drop => {
+      ctx.beginPath();
+      ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 150, 255, ${drop.alpha})`;
+      ctx.fill();
+    });
+  }
+
+  function updateBall() {
+    if (!ball.isDragging) {
+      ball.dy += ball.gravity;
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        ball.dx *= -1;
+      }
+
+      if (ball.y - ball.radius < 0) {
+        ball.y = ball.radius;
+        ball.dy *= ball.bounce;
+      }
+
+      const bottomY = canvas.height - ball.radius;
+      if (ball.y + ball.radius >= canvas.height) {
+        ball.y = bottomY;
+
+        if (!ball.touchedGroundLastFrame || Math.abs(ball.dy) > 1) {
+          createSplash();
+          bounceSound.currentTime = 0;
+          bounceSound.play();
+        }
+
+        if (Math.abs(ball.dy) < 1) {
+          ball.dy = 0;
+          ball.dx *= 0.98;
+          if (Math.abs(ball.dx) < 0.2) {
+            ball.dx = 0;
+            ball.isStable = true;
+          }
+        } else {
+          ball.dy *= ball.bounce;
+        }
+
+        ball.touchedGroundLastFrame = true;
+      } else {
+        ball.touchedGroundLastFrame = false;
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackgroundText();
+    updateBall();
+    updateSplashes();
+    drawBall();
+    drawSplashes();
+    requestAnimationFrame(animate);
+  }
+
+  canvas.addEventListener("click", () => {
+    ball.dx = (Math.random() - 0.5) * 8;
+    ball.dy = -Math.random() * 8 - 6;
+    ball.isStable = false;
+  });
+
+  animate();
+</script>
+</body>
+</html>
