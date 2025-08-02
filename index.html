@@ -11,6 +11,7 @@
       background: white;
       height: 100%;
     }
+
     canvas {
       display: block;
     }
@@ -49,7 +50,7 @@
 
   function drawBackgroundText() {
     ctx.save();
-    ctx.font = ${Math.floor(canvas.width / 8)}px Arial Black;
+    ctx.font = `${Math.floor(canvas.width / 8)}px Arial Black`;
     ctx.fillStyle = "rgba(0, 0, 0, 0.03)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -99,7 +100,7 @@
     splashDrops.forEach(drop => {
       ctx.beginPath();
       ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(0, 150, 255, ${drop.alpha});
+      ctx.fillStyle = `rgba(0, 150, 255, ${drop.alpha})`;
       ctx.fill();
     });
   }
@@ -161,6 +162,7 @@
     ball.dx = (Math.random() - 0.5) * 8;
     ball.dy = -Math.random() * 8 - 6;
     ball.isStable = false;
+
   });
 
   animate();
