@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Interactive Bouncing Ball</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body {
       margin: 0;
@@ -11,18 +11,72 @@
       overflow: hidden;
       height: 100%;
     }
+
     canvas {
       display: block;
+    }
+
+    /* === Popup Styles === */
+    #info-popup.hidden {
+      display: none;
+    }
+
+    #info-popup {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, blue, #ff4b2b);
+      color: white;
+      padding: 2rem 3rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: fadeInOut 5s ease-in-out forwards;
+      z-index: 10;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    #info-popup h1 {
+      font-size: 2.5rem;
+      margin: 0 0 1rem;
+      animation: textPop 1s ease-out;
+    }
+
+    #info-popup p {
+      font-size: 1.3rem;
+      margin: 0;
+      animation: textPop 1.2s ease-out;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      10%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+
+    @keyframes textPop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
+
 <canvas id="canvas"></canvas>
+
+<!-- 🎉 Popup for Name and Roll Number -->
+<div id="info-popup" class="hidden">
+  <h1>Abdeali Travadi</h1>
+  <p>Enrollment No: 240905040066</p>
+</div>
+
 <audio id="bounceSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1a4e31023a.mp3?filename=light-pop-110877.mp3" preload="auto"></audio>
 
 <script>
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
+  const popup = document.getElementById("info-popup");
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -49,7 +103,16 @@
   const birds = [];
   const bounceSound = document.getElementById("bounceSound");
 
-  // Generate random flowers
+  function drawBackgroundText() {
+    ctx.save();
+    ctx.font = `${Math.floor(canvas.width / 8)}px Arial Black`;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.03)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("A.S.TRAVADI", canvas.width / 2, canvas.height / 2);
+    ctx.restore();
+  }
+
   for (let i = 0; i < 30; i++) {
     flowers.push({
       x: Math.random() * canvas.width,
@@ -58,7 +121,6 @@
     });
   }
 
-  // Generate flying birds
   for (let i = 0; i < 5; i++) {
     birds.push({
       x: Math.random() * canvas.width,
@@ -70,14 +132,12 @@
   let sunAngle = 0;
 
   function drawNaturalBackground() {
-    // Sky gradient
     const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    sky.addColorStop(0, "#a0d8ef"); // Light blue sky
+    sky.addColorStop(0, "#a0d8ef");
     sky.addColorStop(1, "#ffffff");
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Sun with rays
     const sunX = canvas.width - 100;
     const sunY = 100;
     const sunRadius = 50;
@@ -106,7 +166,6 @@
 
     sunAngle += 0.01;
 
-    // Birds
     birds.forEach(bird => {
       ctx.beginPath();
       ctx.moveTo(bird.x, bird.y);
@@ -123,11 +182,9 @@
       }
     });
 
-    // Grass
     ctx.fillStyle = "#5cb85c";
     ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
 
-    // Flowers
     flowers.forEach(flower => {
       ctx.beginPath();
       ctx.arc(flower.x, flower.y, 3, 0, Math.PI * 2);
@@ -229,6 +286,7 @@
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawNaturalBackground();
+    drawBackgroundText();
     updateBall();
     updateSplashes();
     drawBall();
@@ -236,11 +294,38 @@
     requestAnimationFrame(animate);
   }
 
-  canvas.addEventListener("click", () => {
+  // 🎯 Only show popup when ball is clicked
+  canvas.addEventListener("click", function (e) {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    const dx = clickX - ball.x;
+    const dy = clickY - ball.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= ball.radius) {
+      showInfo();
+    }
+
+    // Apply bounce movement
     ball.dx = (Math.random() - 0.5) * 8;
     ball.dy = -Math.random() * 8 - 6;
     ball.isStable = false;
   });
+
+  function showInfo() {
+    popup.classList.remove("hidden");
+
+    // Reset animation
+    popup.style.animation = "none";
+    popup.offsetHeight; // trigger reflow
+    popup.style.animation = null;
+
+    setTimeout(() => {
+      popup.classList.add("hidden");
+    }, 5000);
+  }
 
   animate();
 </script>
